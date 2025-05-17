@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { PlusCircle, Clipboard, ArrowRightCircle } from 'lucide-react';
 import Swal from 'sweetalert2';
@@ -9,9 +9,17 @@ import 'sweetalert2/dist/sweetalert2.min.css';
 export default function Home() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
-  const [formUrl, setFormUrl] = useState('');
+  const [relativePath, setRelativePath] = useState('');
+  const [fullUrl, setFullUrl] = useState('');
   const [error, setError] = useState('');
   const [linkInput, setLinkInput] = useState('');
+
+  // Cuando relativePath cambie, construimos fullUrl en cliente
+  useEffect(() => {
+    if (relativePath) {
+      setFullUrl(window.location.origin + relativePath);
+    }
+  }, [relativePath]);
 
   const createForm = async () => {
     setLoading(true);
@@ -19,8 +27,9 @@ export default function Home() {
     try {
       const res = await fetch('/api/create-form', { method: 'POST' });
       if (!res.ok) throw new Error('No se pudo crear el formulario');
-      const { url } = await res.json();
-      setFormUrl(url);
+      const { url: generatedLink } = await res.json();
+      // generatedLink viene como '/forms/<uuid>'
+      setRelativePath(generatedLink);
       setLinkInput('');
       Swal.fire({
         toast: true,
@@ -29,7 +38,7 @@ export default function Home() {
         title: 'Formulario creado',
         showConfirmButton: false,
         timer: 2000,
-        timerProgressBar: true
+        timerProgressBar: true,
       });
     } catch (err) {
       setError(err.message);
@@ -40,7 +49,7 @@ export default function Home() {
         title: err.message,
         showConfirmButton: false,
         timer: 2000,
-        timerProgressBar: true
+        timerProgressBar: true,
       });
     } finally {
       setLoading(false);
@@ -54,7 +63,7 @@ export default function Home() {
 
   const copyToClipboard = async () => {
     try {
-      await navigator.clipboard.writeText(formUrl);
+      await navigator.clipboard.writeText(fullUrl);
       Swal.fire({
         toast: true,
         position: 'top-end',
@@ -62,7 +71,7 @@ export default function Home() {
         title: 'Enlace copiado',
         showConfirmButton: false,
         timer: 2000,
-        timerProgressBar: true
+        timerProgressBar: true,
       });
     } catch {
       Swal.fire({
@@ -72,7 +81,7 @@ export default function Home() {
         title: 'Error al copiar',
         showConfirmButton: false,
         timer: 2000,
-        timerProgressBar: true
+        timerProgressBar: true,
       });
     }
   };
@@ -96,18 +105,18 @@ export default function Home() {
           </button>
 
           {/* URL generado */}
-          {formUrl && (
+          {fullUrl && (
             <div className="w-full mb-4 p-4 bg-green-100 border border-green-300 rounded-lg flex flex-col gap-2">
               <div className="flex items-center justify-between">
                 <p className="text-sm text-green-800 flex-1 truncate">
                   Formulario creado:{' '}
                   <a
-                    href={formUrl}
+                    href={fullUrl}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="underline ml-1 hover:text-green-600"
                   >
-                    {formUrl}
+                    Ver enlace
                   </a>
                 </p>
                 <button
