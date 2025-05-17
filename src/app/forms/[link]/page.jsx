@@ -40,7 +40,7 @@ export default async function Page({ params }) {
     .eq('form_id', form.id)
     .order('created_at', { ascending: false });
 
-  const fullUrl = `${process.env.NEXT_PUBLIC_APP_URL}/forms/${link}`;
+  const fullUrl = `https://${process.env.NEXT_PUBLIC_APP_URL}/forms/${link}`;
 
   return (
     <div className="min-h-screen bg-white py-12">
