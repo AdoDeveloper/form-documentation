@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { PlusCircle, Clipboard, ArrowRightCircle } from 'lucide-react';
 import Swal from 'sweetalert2';
@@ -9,17 +9,9 @@ import 'sweetalert2/dist/sweetalert2.min.css';
 export default function Home() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
-  const [relativePath, setRelativePath] = useState('');
-  const [fullUrl, setFullUrl] = useState('');
+  const [formUuid, setFormUuid] = useState('');    // guardamos solo el UUID
   const [error, setError] = useState('');
   const [linkInput, setLinkInput] = useState('');
-
-  // Cuando relativePath cambie, construimos fullUrl en cliente
-  useEffect(() => {
-    if (relativePath) {
-      setFullUrl(window.location.origin + relativePath);
-    }
-  }, [relativePath]);
 
   const createForm = async () => {
     setLoading(true);
@@ -27,9 +19,9 @@ export default function Home() {
     try {
       const res = await fetch('/api/create-form', { method: 'POST' });
       if (!res.ok) throw new Error('No se pudo crear el formulario');
-      const { url: generatedLink } = await res.json();
-      // generatedLink viene como '/forms/<uuid>'
-      setRelativePath(generatedLink);
+      const { url } = await res.json();           // url viene completa
+      const uuid = url.split('/').pop();          // extraemos solo el UUID
+      setFormUuid(uuid);
       setLinkInput('');
       Swal.fire({
         toast: true,
@@ -38,7 +30,7 @@ export default function Home() {
         title: 'Formulario creado',
         showConfirmButton: false,
         timer: 2000,
-        timerProgressBar: true,
+        timerProgressBar: true
       });
     } catch (err) {
       setError(err.message);
@@ -49,7 +41,7 @@ export default function Home() {
         title: err.message,
         showConfirmButton: false,
         timer: 2000,
-        timerProgressBar: true,
+        timerProgressBar: true
       });
     } finally {
       setLoading(false);
@@ -62,8 +54,9 @@ export default function Home() {
   };
 
   const copyToClipboard = async () => {
+    const full = `${window.location.origin}/forms/${formUuid}`;
     try {
-      await navigator.clipboard.writeText(fullUrl);
+      await navigator.clipboard.writeText(full);
       Swal.fire({
         toast: true,
         position: 'top-end',
@@ -71,7 +64,7 @@ export default function Home() {
         title: 'Enlace copiado',
         showConfirmButton: false,
         timer: 2000,
-        timerProgressBar: true,
+        timerProgressBar: true
       });
     } catch {
       Swal.fire({
@@ -81,7 +74,7 @@ export default function Home() {
         title: 'Error al copiar',
         showConfirmButton: false,
         timer: 2000,
-        timerProgressBar: true,
+        timerProgressBar: true
       });
     }
   };
@@ -94,7 +87,7 @@ export default function Home() {
             Gestor de Formularios
           </h1>
 
-          {/* Crear */}
+          {/* Crear nuevo formulario */}
           <button
             onClick={createForm}
             disabled={loading}
@@ -104,19 +97,18 @@ export default function Home() {
             {loading ? 'Creando...' : 'Nuevo Formulario'}
           </button>
 
-          {/* URL generado */}
-          {fullUrl && (
+          {/* Mostrar enlace y copiar */}
+          {formUuid && (
             <div className="w-full mb-4 p-4 bg-green-100 border border-green-300 rounded-lg flex flex-col gap-2">
               <div className="flex items-center justify-between">
                 <p className="text-sm text-green-800 flex-1 truncate">
                   Formulario creado:{' '}
                   <a
-                    href={fullUrl}
-                    target="_blank"
+                    href={`/forms/${formUuid}`}
                     rel="noopener noreferrer"
                     className="underline ml-1 hover:text-green-600"
                   >
-                    Ver enlace
+                    /forms/{formUuid}
                   </a>
                 </p>
                 <button
@@ -137,7 +129,7 @@ export default function Home() {
             </div>
           )}
 
-          {/* Acceder */}
+          {/* Acceder a un formulario existente */}
           <div className="w-full flex flex-col sm:flex-row gap-2">
             <input
               type="text"
