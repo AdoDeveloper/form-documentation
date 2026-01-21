@@ -12,7 +12,7 @@
     "@supabase/supabase-js": "^2.49.4",
     "lucide-react": "^0.511.0",
     "mi-formulario": "file:",
-    "next": "15.3.2",
+    "next": "15.3.8",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "sweetalert2": "^11.21.1",
